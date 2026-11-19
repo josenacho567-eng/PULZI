@@ -21,6 +21,7 @@ import com.example.pulzy.ui.theme.*
 fun LoginScreen(
     onLoginSuccess: () -> Unit,
     onNavigateToRegister: () -> Unit,
+    onUserEntered: (String) -> Unit = {},
     modifier: Modifier = Modifier,
     initialNombre: String = "matias.estudiante",
     initialPassword: String = "pulzi2026"
@@ -104,7 +105,7 @@ fun LoginScreen(
 
                 PulziButton(
                     text = "Entrar  →",
-                    onClick = { onLoginSuccess() },
+                    onClick = { onUserEntered(nombre); onLoginSuccess() },
                     variant = PulziButtonVariant.Primary
                 )
             }
@@ -161,6 +162,7 @@ fun LoginScreen(
 fun RegisterScreen(
     onRegisterSuccess: () -> Unit,
     onNavigateToLogin: () -> Unit,
+    onRegistrationData: (String, String, Set<String>) -> Unit = { _, _, _ -> },
     modifier: Modifier = Modifier,
     initialNombre: String = "Camila Flores",
     initialPassword: String = "lapaz2026",
@@ -320,7 +322,10 @@ fun RegisterScreen(
 
                 PulziButton(
                     text = "Continuar  →",
-                    onClick = { onRegisterSuccess() },
+                    onClick = {
+                        onRegistrationData(nombre, universidad, selectedTemas)
+                        onRegisterSuccess()
+                    },
                     variant = PulziButtonVariant.Primary
                 )
             }

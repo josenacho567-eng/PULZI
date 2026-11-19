@@ -13,6 +13,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import com.example.pulzy.ui.*
 import com.example.pulzy.ui.theme.PulzyTheme
+import com.example.pulzy.model.Usuario
 import kotlinx.coroutines.delay
 
 enum class PulziDestination {
@@ -38,23 +39,20 @@ fun PulziApp(
     var currentDestination by rememberSaveable { mutableStateOf(initialDestination) }
     var selectedTab by rememberSaveable { mutableStateOf("Inicio") }
 
-    // Estado global en memoria para intereses de usuario y eventos guardados
-    var userLikedTopics by rememberSaveable {
-        mutableStateOf(setOf("Música", "Cultura", "Comunidad"))
-    }
-    var savedEventIds by rememberSaveable {
-        mutableStateOf(setOf<String>())
-    }
+    var usuario by remember { mutableStateOf(Usuario()) }
+    val userLikedTopics = usuario.temas
+    val savedEventIds = usuario.eventosGuardados
     var eventsInitialFilter by rememberSaveable {
         mutableStateOf("Todos")
     }
 
     val onToggleSave: (String) -> Unit = { id ->
-        savedEventIds = if (savedEventIds.contains(id)) {
+        val nuevos = if (savedEventIds.contains(id)) {
             savedEventIds - id
         } else {
             savedEventIds + id
         }
+        usuario = usuario.copy(eventosGuardados = nuevos)
     }
 
     LaunchedEffect(Unit) {
@@ -78,6 +76,9 @@ fun PulziApp(
         when (currentDestination) {
             PulziDestination.Login -> {
                 LoginScreen(
+                    onUserEntered = { nombre ->
+                        usuario = Usuario(nombre = nombre.ifBlank { "Estudiante PULZI" })
+                    },
                     onLoginSuccess = {
                         selectedTab = "Inicio"
                         currentDestination = PulziDestination.Main
@@ -89,6 +90,13 @@ fun PulziApp(
             }
             PulziDestination.Register -> {
                 RegisterScreen(
+                    onRegistrationData = { nombre, universidad, temas ->
+                        usuario = Usuario(
+                            nombre = nombre.ifBlank { "Estudiante PULZI" },
+                            universidad = universidad.ifBlank { "Universidad Mayor de San Andrés" },
+                            temas = temas
+                        )
+                    },
                     onRegisterSuccess = {
                         selectedTab = "Inicio"
                         currentDestination = PulziDestination.Main
@@ -138,14 +146,15 @@ fun PulziApp(
                             modifier = Modifier.padding(padding)
                         )
                         "Perfil" -> ProfileScreen(
-                            userLikedTopics = userLikedTopics,
-                            onUpdateLikedTopics = { userLikedTopics = it },
-                            savedEventIds = savedEventIds,
+                            usuario = usuario,
+                            onUpdateLikedTopics = { usuario = usuario.copy(temas = it) },
+                            onPhotoSelected = { usuario = usuario.copy(fotoUri = it) },
                             onNavigateToSavedEvents = {
                                 eventsInitialFilter = "★ Guardados"
                                 selectedTab = "Eventos"
                             },
                             onLogout = {
+                                usuario = Usuario()
                                 currentDestination = PulziDestination.Login
                             },
                             modifier = Modifier.padding(padding)
