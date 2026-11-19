@@ -1,6 +1,11 @@
 package com.example.pulzy.ui
 
+import android.graphics.BitmapFactory
+import android.net.Uri
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
@@ -8,22 +13,39 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.pulzy.model.DemoEvents
+import com.example.pulzy.model.Usuario
 import com.example.pulzy.ui.theme.*
 
 @Composable
 fun ProfileScreen(
-    userLikedTopics: Set<String>,
+    usuario: Usuario,
     onUpdateLikedTopics: (Set<String>) -> Unit,
-    savedEventIds: Set<String>,
+    onPhotoSelected: (String) -> Unit,
     onNavigateToSavedEvents: () -> Unit,
     onLogout: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val userLikedTopics = usuario.temas
+    val savedEventIds = usuario.eventosGuardados
+    val context = LocalContext.current
+    val photo = remember(usuario.fotoUri) {
+        usuario.fotoUri?.let { uri ->
+            runCatching {
+                context.contentResolver.openInputStream(Uri.parse(uri))?.use(BitmapFactory::decodeStream)
+            }.getOrNull()
+        }
+    }
+    val photoPicker = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri ->
+        if (uri != null) onPhotoSelected(uri.toString())
+    }
     Page(modifier = modifier) {
         Heading(
             title = "Tu espacio PULZI",
@@ -46,30 +68,33 @@ fun ProfileScreen(
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(14.dp)
                 ) {
-                    Surface(
-                        color = Yellow,
-                        shape = RoundedCornerShape(18.dp)
-                    ) {
-                        Text(
-                            text = "☺",
-                            fontSize = 32.sp,
-                            modifier = Modifier.padding(horizontal = 14.dp, vertical = 8.dp)
-                        )
+                    Surface(color = Yellow, shape = RoundedCornerShape(18.dp)) {
+                        Box(Modifier.size(64.dp), contentAlignment = Alignment.Center) {
+                            if (photo != null) {
+                                Image(photo.asImageBitmap(), "Foto de perfil",
+                                    Modifier.fillMaxSize(), contentScale = ContentScale.Crop)
+                            } else {
+                                Text(usuario.nombre.take(1).uppercase(), fontSize = 32.sp, color = Ink)
+                            }
+                        }
                     }
 
                     Column {
                         Text(
-                            text = "Estudiante PULZI",
+                            text = usuario.nombre,
                             color = Color.White,
                             fontSize = 22.sp,
                             fontWeight = FontWeight.Bold
                         )
                         Text(
-                            text = "La Paz, Bolivia · Universidad Mayor de San Andrés",
+                            text = "La Paz, Bolivia · ${usuario.universidad}",
                             color = Color.White.copy(alpha = 0.8f),
                             fontSize = 13.sp
                         )
                     }
+                }
+                TextButton(onClick = { photoPicker.launch("image/*") }) {
+                    Text("Cambiar foto", color = Yellow, fontWeight = FontWeight.Bold)
                 }
             }
         }
@@ -81,12 +106,11 @@ fun ProfileScreen(
             border = BorderStroke(1.dp, Ink.copy(alpha = 0.1f)),
             modifier = Modifier.fillMaxWidth()
         ) {
-            Row(
+            Column(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(20.dp),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
+                verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
                 Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
                     Text(
@@ -198,12 +222,6 @@ fun ProfileScreen(
 
         HorizontalDivider(color = Ink.copy(alpha = 0.1f))
 
-        Text(
-            text = "PULZI ✦ La Paz, Bolivia\nPrimer avance - Entrevista y prototipo navegable.",
-            color = Violet,
-            fontSize = 12.sp,
-            lineHeight = 16.sp
-        )
     }
 }
 
@@ -212,9 +230,9 @@ fun ProfileScreen(
 private fun ProfileScreenPreview() {
     PulzyTheme {
         ProfileScreen(
-            userLikedTopics = setOf("Música", "Cultura", "Comunidad"),
+            usuario = Usuario(temas = setOf("Música", "Cultura", "Comunidad"), eventosGuardados = setOf("evt_1")),
             onUpdateLikedTopics = {},
-            savedEventIds = setOf("evt_1"),
+            onPhotoSelected = {},
             onNavigateToSavedEvents = {},
             onLogout = {}
         )
