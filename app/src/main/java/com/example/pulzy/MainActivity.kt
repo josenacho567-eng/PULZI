@@ -38,6 +38,25 @@ fun PulziApp(
     var currentDestination by rememberSaveable { mutableStateOf(initialDestination) }
     var selectedTab by rememberSaveable { mutableStateOf("Inicio") }
 
+    // Estado global en memoria para intereses de usuario y eventos guardados
+    var userLikedTopics by rememberSaveable {
+        mutableStateOf(setOf("Música", "Cultura", "Comunidad"))
+    }
+    var savedEventIds by rememberSaveable {
+        mutableStateOf(setOf<String>())
+    }
+    var eventsInitialFilter by rememberSaveable {
+        mutableStateOf("Todos")
+    }
+
+    val onToggleSave: (String) -> Unit = { id ->
+        savedEventIds = if (savedEventIds.contains(id)) {
+            savedEventIds - id
+        } else {
+            savedEventIds + id
+        }
+    }
+
     LaunchedEffect(Unit) {
         if (loading) {
             delay(1400)
@@ -86,8 +105,25 @@ fun PulziApp(
                             listOf("Inicio" to "⌂", "Eventos" to "☆", "Perfil" to "☺").forEach { (title, symbol) ->
                                 NavigationBarItem(
                                     selected = selectedTab == title,
-                                    onClick = { selectedTab = title },
-                                    icon = { Text(symbol) },
+                                    onClick = {
+                                        if (title == "Eventos" && selectedTab != "Eventos") {
+                                            eventsInitialFilter = "Todos"
+                                        }
+                                        selectedTab = title
+                                    },
+                                    icon = {
+                                        if (title == "Eventos" && savedEventIds.isNotEmpty()) {
+                                            BadgedBox(
+                                                badge = {
+                                                    Badge { Text("${savedEventIds.size}") }
+                                                }
+                                            ) {
+                                                Text(symbol)
+                                            }
+                                        } else {
+                                            Text(symbol)
+                                        }
+                                    },
                                     label = { Text(title) }
                                 )
                             }
@@ -95,14 +131,35 @@ fun PulziApp(
                     }
                 ) { padding ->
                     when (selectedTab) {
-                        "Eventos" -> EventsScreen(Modifier.padding(padding))
+                        "Eventos" -> EventsScreen(
+                            savedEventIds = savedEventIds,
+                            onToggleSave = onToggleSave,
+                            initialFilter = eventsInitialFilter,
+                            modifier = Modifier.padding(padding)
+                        )
                         "Perfil" -> ProfileScreen(
-                            modifier = Modifier.padding(padding),
+                            userLikedTopics = userLikedTopics,
+                            onUpdateLikedTopics = { userLikedTopics = it },
+                            savedEventIds = savedEventIds,
+                            onNavigateToSavedEvents = {
+                                eventsInitialFilter = "★ Guardados"
+                                selectedTab = "Eventos"
+                            },
                             onLogout = {
                                 currentDestination = PulziDestination.Login
-                            }
+                            },
+                            modifier = Modifier.padding(padding)
                         )
-                        else -> HomeScreen(Modifier.padding(padding), onEvents = { selectedTab = "Eventos" })
+                        else -> HomeScreen(
+                            userLikedTopics = userLikedTopics,
+                            savedEventIds = savedEventIds,
+                            onToggleSave = onToggleSave,
+                            onNavigateToEvents = { topicFilter ->
+                                eventsInitialFilter = topicFilter ?: "Todos"
+                                selectedTab = "Eventos"
+                            },
+                            modifier = Modifier.padding(padding)
+                        )
                     }
                 }
             }

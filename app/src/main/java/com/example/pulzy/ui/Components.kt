@@ -2,6 +2,7 @@ package com.example.pulzy.ui
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -10,14 +11,15 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.pulzy.model.Event
 import com.example.pulzy.ui.theme.*
 
 enum class PulziButtonVariant {
@@ -137,7 +139,10 @@ fun PulziField(
 }
 
 @Composable
-private fun Page(modifier: Modifier, content: @Composable ColumnScope.() -> Unit) {
+fun Page(
+    modifier: Modifier = Modifier,
+    content: @Composable ColumnScope.() -> Unit
+) {
     Column(
         modifier
             .fillMaxSize()
@@ -150,150 +155,223 @@ private fun Page(modifier: Modifier, content: @Composable ColumnScope.() -> Unit
 }
 
 @Composable
-private fun Heading(title: String, subtitle: String) {
-    Text(title, fontSize = 30.sp, fontWeight = FontWeight.ExtraBold, color = Ink)
-    Text(subtitle, style = MaterialTheme.typography.bodyLarge)
-}
-
-@Composable
-fun HomeScreen(modifier: Modifier = Modifier, onEvents: () -> Unit) {
-    Page(modifier) {
-        Text("PULZI  ✦", color = Violet, fontSize = 24.sp, fontWeight = FontWeight.Black)
-        Text("LA PAZ, BOLIVIA  •  A TU RITMO", color = Violet, fontSize = 12.sp)
-        Heading("La vida uni\nse vive afuera.", "Descubre planes, conecta y haz tuya la ciudad.")
-        Card(colors = CardDefaults.cardColors(containerColor = Violet), shape = RoundedCornerShape(28.dp)) {
-            Column(Modifier.padding(24.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
-                Text("TU PRÓXIMO GRAN PLAN", color = Yellow, fontWeight = FontWeight.Bold)
-                Text("Menos rutina.\nMás historias.", color = Color.White, fontSize = 30.sp, fontWeight = FontWeight.Bold)
-                Text("Cultura, música y encuentros para estudiantes paceños.", color = Color.White)
-                Button(onClick = onEvents, colors = ButtonDefaults.buttonColors(containerColor = Yellow, contentColor = Ink)) {
-                    Text("Explorar eventos  →")
-                }
-            }
-        }
-        Text("Conecta con lo que te mueve", fontSize = 21.sp, fontWeight = FontWeight.Bold)
-        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            listOf("Música", "Cultura", "Comunidad").forEach {
-                SuggestionChip(onClick = onEvents, label = { Text(it) })
-            }
-        }
-        Card(colors = CardDefaults.cardColors(containerColor = Color(0xFFE1EED4))) {
-            Column(Modifier.padding(20.dp)) {
-                Text("Hecho para tu altura ✦", fontSize = 22.sp, fontWeight = FontWeight.Bold)
-                Text("Nuevas experiencias a 3.600 metros. Empieza por descubrir tu próximo encuentro.")
-            }
-        }
+fun Heading(title: String, subtitle: String) {
+    Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+        Text(title, fontSize = 30.sp, fontWeight = FontWeight.ExtraBold, color = Ink, lineHeight = 36.sp)
+        Text(subtitle, style = MaterialTheme.typography.bodyLarge, color = Ink.copy(alpha = 0.75f))
     }
 }
 
 @Composable
-fun EventsScreen(modifier: Modifier = Modifier) {
-    var filter by rememberSaveable { mutableStateOf("Todos") }
-    var detail by rememberSaveable { mutableStateOf<String?>(null) }
-    val events = listOf(
-        Triple("Música", "Sesión acústica universitaria", "Viernes · 18:00 · Sopocachi"),
-        Triple("Cultura", "Ruta de museos", "Sábado · 10:00 · Centro paceño"),
-        Triple("Comunidad", "Encuentro entre estudiantes", "Domingo · 15:00 · Miraflores")
-    )
-    Page(modifier) {
-        Heading("Encuentra tu plan", "La Paz tiene algo para ti.")
-        Text("Agenda de demostración", color = Violet)
-        Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-            listOf("Todos", "Música", "Cultura").forEach { category ->
-                FilterChip(selected = filter == category, onClick = { filter = category }, label = { Text(category) })
-            }
-        }
-        events.filter { filter == "Todos" || it.first == filter }.forEachIndexed { index, event ->
-            Card(
-                colors = CardDefaults.cardColors(containerColor = if (index % 2 == 0) Yellow else Color(0xFFE8DBFF)),
-                shape = RoundedCornerShape(24.dp)
-            ) {
-                Column(Modifier.fillMaxWidth().padding(22.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                    Text(event.first.uppercase(), color = Violet, fontWeight = FontWeight.Bold)
-                    Text(event.second, fontSize = 24.sp, fontWeight = FontWeight.Bold)
-                    Text(event.third)
-                    TextButton(onClick = { detail = event.second }) { Text("Ver el plan  →") }
-                }
-            }
-        }
-    }
-    detail?.let { title ->
-        AlertDialog(
-            onDismissRequest = { detail = null },
-            title = { Text(title) },
-            text = { Text("Plan de ejemplo para explorar PULZI. Entrada libre para estudiantes. Los horarios y lugares son ilustrativos; no se realizan reservas.") },
-            confirmButton = { TextButton(onClick = { detail = null }) { Text("Entendido") } }
-        )
-    }
-}
-
-@Composable
-fun ProfileScreen(
-    modifier: Modifier = Modifier,
-    onLogout: (() -> Unit)? = null
+fun EventCard(
+    event: Event,
+    isSaved: Boolean,
+    onToggleSave: () -> Unit,
+    onDetailClick: () -> Unit,
+    modifier: Modifier = Modifier
 ) {
-    var notifications by rememberSaveable { mutableStateOf(false) }
-    Page(modifier) {
-        Heading("Tu espacio", "Tu vida universitaria, a tu manera.")
-        Card(colors = CardDefaults.cardColors(containerColor = Violet)) {
-            Column(Modifier.fillMaxWidth().padding(24.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                Text("☺", fontSize = 48.sp, color = Yellow)
-                Text("Hola, estudiante", color = Color.White, fontSize = 26.sp, fontWeight = FontWeight.Bold)
-                Text("La Paz · Perfil de demostración", color = Color.White)
-            }
-        }
-        Text("Tus intereses", fontSize = 22.sp, fontWeight = FontWeight.Bold)
-        Text("Música · Cultura · Comunidad")
-        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-            Text("Recordatorios de ejemplo", modifier = Modifier.weight(1f))
-            Switch(checked = notifications, onCheckedChange = { notifications = it })
-        }
-        Text(if (notifications) "Preferencia activada en esta sesión. No se envían notificaciones." else "Explora a tu ritmo.")
-
-        if (onLogout != null) {
-            Spacer(Modifier.height(8.dp))
-            Button(
-                onClick = onLogout,
-                colors = ButtonDefaults.buttonColors(containerColor = Color.White, contentColor = Violet),
-                shape = RoundedCornerShape(16.dp),
-                border = BorderStroke(1.5.dp, Violet),
-                modifier = Modifier.fillMaxWidth().height(50.dp)
+    Card(
+        colors = CardDefaults.cardColors(containerColor = event.cardBgColor),
+        shape = RoundedCornerShape(24.dp),
+        border = BorderStroke(1.5.dp, Ink.copy(alpha = 0.08f)),
+        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
+        modifier = modifier
+            .fillMaxWidth()
+            .clickable { onDetailClick() }
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(20.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            // Fila superior: Chip de Tema y Botón Guardar
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                Text("Cerrar sesión  (Volver al ingreso)", fontWeight = FontWeight.Bold)
+                Surface(
+                    color = Violet,
+                    shape = RoundedCornerShape(12.dp),
+                    contentColor = Color.White
+                ) {
+                    Text(
+                        text = "✦ ${event.topic.uppercase()}",
+                        fontSize = 11.sp,
+                        fontWeight = FontWeight.ExtraBold,
+                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
+                        letterSpacing = 0.5.sp
+                    )
+                }
+
+                Button(
+                    onClick = onToggleSave,
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = if (isSaved) Violet else Color.White,
+                        contentColor = if (isSaved) Yellow else Ink
+                    ),
+                    shape = RoundedCornerShape(14.dp),
+                    border = if (!isSaved) BorderStroke(1.dp, Ink.copy(alpha = 0.2f)) else null,
+                    contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp),
+                    modifier = Modifier.height(36.dp)
+                ) {
+                    Text(
+                        text = if (isSaved) "★ Guardado" else "☆ Guardar",
+                        fontSize = 13.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+            }
+
+            // Título
+            Text(
+                text = event.title,
+                fontSize = 22.sp,
+                fontWeight = FontWeight.Bold,
+                color = Ink,
+                lineHeight = 28.sp
+            )
+
+            // Organizador y detalles de tiempo/lugar
+            Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                Text(
+                    text = "Por ${event.organizer}",
+                    fontSize = 13.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    color = Violet
+                )
+                Text(
+                    text = "📅 ${event.date}",
+                    fontSize = 13.sp,
+                    color = Ink.copy(alpha = 0.85f),
+                    fontWeight = FontWeight.Medium
+                )
+                Text(
+                    text = "📍 ${event.location}",
+                    fontSize = 13.sp,
+                    color = Ink.copy(alpha = 0.85f),
+                    fontWeight = FontWeight.Medium
+                )
+            }
+
+            // Descripción breve
+            Text(
+                text = event.description,
+                fontSize = 14.sp,
+                color = Ink.copy(alpha = 0.75f),
+                lineHeight = 20.sp,
+                maxLines = 2
+            )
+
+            HorizontalDivider(color = Ink.copy(alpha = 0.1f))
+
+            // Fila inferior: Tag Entrada Libre y Ver detalles
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                if (event.isFree) {
+                    Surface(
+                        color = Yellow,
+                        shape = RoundedCornerShape(8.dp),
+                        contentColor = Ink
+                    ) {
+                        Text(
+                            text = "Entrada libre",
+                            fontSize = 11.sp,
+                            fontWeight = FontWeight.Bold,
+                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+                        )
+                    }
+                } else {
+                    Spacer(Modifier.width(1.dp))
+                }
+
+                TextButton(
+                    onClick = onDetailClick,
+                    contentPadding = PaddingValues(horizontal = 8.dp)
+                ) {
+                    Text(
+                        text = "Ver detalles  →",
+                        color = Violet,
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 14.sp
+                    )
+                }
             }
         }
-
-        HorizontalDivider()
-        Text("PULZI ✦\nHecho para estudiantes de La Paz.", color = Violet)
     }
 }
 
-@Preview(name = "Inicio", showBackground = true, widthDp = 390, heightDp = 844)
 @Composable
-private fun HomeScreenPreview() {
-    PulzyTheme {
-        Surface {
-            HomeScreen(onEvents = {})
-        }
-    }
-}
-
-@Preview(name = "Eventos", showBackground = true, widthDp = 390, heightDp = 844)
-@Composable
-private fun EventsScreenPreview() {
-    PulzyTheme {
-        Surface {
-            EventsScreen()
-        }
-    }
-}
-
-@Preview(name = "Perfil", showBackground = true, widthDp = 390, heightDp = 844)
-@Composable
-private fun ProfileScreenPreview() {
-    PulzyTheme {
-        Surface {
-            ProfileScreen()
-        }
-    }
+fun EventDetailDialog(
+    event: Event,
+    isSaved: Boolean,
+    onToggleSave: () -> Unit,
+    onDismiss: () -> Unit
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = {
+            Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                Surface(
+                    color = Violet,
+                    shape = RoundedCornerShape(10.dp),
+                    contentColor = Color.White
+                ) {
+                    Text(
+                        text = "✦ ${event.topic.uppercase()}",
+                        fontSize = 11.sp,
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+                    )
+                }
+                Text(
+                    text = event.title,
+                    fontSize = 22.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = Ink,
+                    lineHeight = 28.sp
+                )
+            }
+        },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                Text("Organiza: ${event.organizer}", color = Violet, fontWeight = FontWeight.SemiBold, fontSize = 14.sp)
+                Text("📅 ${event.date}", fontSize = 14.sp, color = Ink)
+                Text("📍 ${event.location}", fontSize = 14.sp, color = Ink)
+                HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp), color = Ink.copy(alpha = 0.1f))
+                Text(event.description, fontSize = 14.sp, color = Ink.copy(alpha = 0.85f), lineHeight = 20.sp)
+                Text(
+                    "✦ Plan universitario de demostración. Entrada libre para estudiantes.",
+                    fontSize = 12.sp,
+                    color = Ink.copy(alpha = 0.6f),
+                    fontWeight = FontWeight.Medium
+                )
+            }
+        },
+        confirmButton = {
+            Button(
+                onClick = {
+                    onToggleSave()
+                },
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = if (isSaved) Violet else Yellow,
+                    contentColor = if (isSaved) Color.White else Ink
+                ),
+                shape = RoundedCornerShape(12.dp)
+            ) {
+                Text(if (isSaved) "★ Quitar de guardados" else "☆ Guardar evento", fontWeight = FontWeight.Bold)
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text("Cerrar", color = Ink)
+            }
+        },
+        containerColor = Cream,
+        shape = RoundedCornerShape(24.dp)
+    )
 }
