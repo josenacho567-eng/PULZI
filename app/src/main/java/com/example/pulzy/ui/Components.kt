@@ -22,12 +22,6 @@ import androidx.compose.ui.unit.sp
 import com.example.pulzy.model.Event
 import com.example.pulzy.ui.theme.*
 
-enum class PulziButtonVariant {
-    Primary,
-    Secondary,
-    Outline
-}
-
 @Composable
 fun PulziButton(
     text: String,

@@ -16,12 +16,6 @@ import com.example.pulzy.ui.theme.PulzyTheme
 import com.example.pulzy.model.Usuario
 import kotlinx.coroutines.delay
 
-enum class PulziDestination {
-    Login,
-    Register,
-    Main
-}
-
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -47,12 +41,7 @@ fun PulziApp(
     }
 
     val onToggleSave: (String) -> Unit = { id ->
-        val nuevos = if (savedEventIds.contains(id)) {
-            savedEventIds - id
-        } else {
-            savedEventIds + id
-        }
-        usuario = usuario.copy(eventosGuardados = nuevos)
+        com.example.pulzy.model.DemoEvents.eventos[id]?.let { usuario = usuario.alternarGuardado(it) }
     }
 
     LaunchedEffect(Unit) {
@@ -93,9 +82,8 @@ fun PulziApp(
                     onRegistrationData = { nombre, universidad, temas ->
                         usuario = Usuario(
                             nombre = nombre.ifBlank { "Estudiante PULZI" },
-                            universidad = universidad.ifBlank { "Universidad Mayor de San Andrés" },
-                            temas = temas
-                        )
+                            universidad = universidad.ifBlank { "Universidad Mayor de San Andrés" }
+                        ).elegirTemas(temas)
                     },
                     onRegisterSuccess = {
                         selectedTab = "Inicio"
@@ -147,8 +135,8 @@ fun PulziApp(
                         )
                         "Perfil" -> ProfileScreen(
                             usuario = usuario,
-                            onUpdateLikedTopics = { usuario = usuario.copy(temas = it) },
-                            onPhotoSelected = { usuario = usuario.copy(fotoUri = it) },
+                            onUpdateLikedTopics = { usuario = usuario.elegirTemas(it) },
+                            onPhotoSelected = { usuario = usuario.cambiarFoto(it) },
                             onNavigateToSavedEvents = {
                                 eventsInitialFilter = "★ Guardados"
                                 selectedTab = "Eventos"

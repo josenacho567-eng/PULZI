@@ -230,7 +230,7 @@ fun ProfileScreen(
 private fun ProfileScreenPreview() {
     PulzyTheme {
         ProfileScreen(
-            usuario = Usuario(temas = setOf("Música", "Cultura", "Comunidad"), eventosGuardados = setOf("evt_1")),
+            usuario = Usuario().alternarGuardado(com.example.pulzy.model.DemoEvents.eventos.getValue("evt_1")),
             onUpdateLikedTopics = {},
             onPhotoSelected = {},
             onNavigateToSavedEvents = {},
