@@ -2,18 +2,6 @@ package com.example.pulzy.model
 
 import androidx.compose.ui.graphics.Color
 
-data class Event(
-    val id: String,
-    val title: String,
-    val topic: String,
-    val date: String,
-    val location: String,
-    val description: String,
-    val organizer: String,
-    val isFree: Boolean = true,
-    val cardBgColor: Color = Color.White
-)
-
 object DemoEvents {
     val topics = listOf(
         "Música",
@@ -23,6 +11,8 @@ object DemoEvents {
         "Tecnología",
         "Vida Nocturna"
     )
+
+    val catalogoTemas = topics.mapIndexed { index, nombre -> Tema(index + 1, nombre) }
 
     val list: List<Event> = listOf(
         Event(
@@ -86,4 +76,14 @@ object DemoEvents {
             cardBgColor = Color(0xFFE5D4FF)
         )
     )
+
+    val eventos = list.associate { ficha ->
+        val id = ficha.id.removePrefix("evt_").toInt()
+        val local = Establecimiento(id, ficha.organizer, ficha.location, "", AccesoLocal(id, Usuario(id = -id, nombre = ficha.organizer), RolLocal.ADMINISTRADOR))
+        val evento = Evento(id, ficha.title, java.util.GregorianCalendar(2025, if (id <= 3) 2 else 3,
+            listOf(28, 29, 30, 5, 6, 6)[id - 1], listOf(18, 19, 10, 9, 14, 21)[id - 1], 0).time, 100, java.math.BigDecimal.ZERO,
+            catalogoTemas.first { it.nombre == ficha.topic }, local)
+        local.crearEvento(evento)
+        ficha.id to evento
+    }
 }
