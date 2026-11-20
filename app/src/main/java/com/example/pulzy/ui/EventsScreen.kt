@@ -168,7 +168,7 @@ fun EventsScreen(
         // Renderizado de lista de eventos o estado vacío
         if (filteredEvents.isEmpty()) {
             Card(
-                colors = CardDefaults.cardColors(containerColor = Color.White),
+                colors = CardDefaults.cardColors(containerColor = Color.Yellow),
                 shape = RoundedCornerShape(24.dp),
                 border = BorderStroke(1.dp, Ink.copy(alpha = 0.1f)),
                 modifier = Modifier.fillMaxWidth()

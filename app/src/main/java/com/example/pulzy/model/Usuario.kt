@@ -2,7 +2,7 @@ package com.example.pulzy.model
 
 data class Usuario(
     val nombre: String = "Estudiante PULZI",
-    val universidad: String = "Universidad Mayor de San Andrés",
+    val universidad: String = "UPB",
     val fotoPerfil: String? = null,
     val id: Int = 1,
     val correo: String = "",

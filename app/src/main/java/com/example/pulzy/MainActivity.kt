@@ -82,7 +82,7 @@ fun PulziApp(
                     onRegistrationData = { nombre, universidad, temas ->
                         usuario = Usuario(
                             nombre = nombre.ifBlank { "Estudiante PULZI" },
-                            universidad = universidad.ifBlank { "Universidad Mayor de San Andrés" }
+                            universidad = universidad.ifBlank { "UPB" }
                         ).elegirTemas(temas)
                     },
                     onRegisterSuccess = {

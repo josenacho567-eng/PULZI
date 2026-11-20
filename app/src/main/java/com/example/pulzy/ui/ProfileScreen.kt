@@ -16,10 +16,13 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.pulzy.R
 import com.example.pulzy.model.DemoEvents
 import com.example.pulzy.model.Usuario
 import com.example.pulzy.ui.theme.*
@@ -74,7 +77,12 @@ fun ProfileScreen(
                                 Image(photo.asImageBitmap(), "Foto de perfil",
                                     Modifier.fillMaxSize(), contentScale = ContentScale.Crop)
                             } else {
-                                Text(usuario.nombre.take(1).uppercase(), fontSize = 32.sp, color = Ink)
+                                Image(
+                                    painter = painterResource(R.drawable.venom),
+                                    contentDescription = stringResource(R.string.foto_perfil_venom),
+                                    modifier = Modifier.fillMaxSize(),
+                                    contentScale = ContentScale.Crop
+                                )
                             }
                         }
                     }
@@ -93,9 +101,9 @@ fun ProfileScreen(
                         )
                     }
                 }
-                TextButton(onClick = { photoPicker.launch("image/*") }) {
-                    Text("Cambiar foto", color = Yellow, fontWeight = FontWeight.Bold)
-                }
+
+                Text("Cambiar foto", color = Yellow, fontWeight = FontWeight.Bold)
+
             }
         }
 

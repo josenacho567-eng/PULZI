@@ -166,7 +166,7 @@ fun RegisterScreen(
     modifier: Modifier = Modifier,
     initialNombre: String = "Camila Flores",
     initialPassword: String = "lapaz2026",
-    initialUniversidad: String = "UMSA",
+    initialUniversidad: String = "UPB",
     initialTemas: Set<String> = setOf("Música", "Cultura", "Comunidad")
 ) {
     var nombre by rememberSaveable { mutableStateOf(initialNombre) }
@@ -276,7 +276,7 @@ fun RegisterScreen(
                         color = Ink.copy(alpha = 0.65f)
                     )
 
-                    FlowRow(
+                    FlowRow (
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.spacedBy(8.dp),
                         verticalArrangement = Arrangement.spacedBy(8.dp)
@@ -391,7 +391,7 @@ fun RegisterScreenSamplePreview() {
             onNavigateToLogin = {},
             initialNombre = "Camila Flores",
             initialPassword = "lapaz2026",
-            initialUniversidad = "UMSA",
+            initialUniversidad = "UPB",
             initialTemas = setOf("Música", "Cultura", "Comunidad")
         )
     }
